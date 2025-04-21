@@ -34,8 +34,8 @@ The script relies on your default kube‑config _or_ in‑cluster service accoun
 
 ```bash
 python helm_selector.py \
-  --release-name       <release>     \
-  --release-namespace  <namespace>   \
+  --name       <release>     \
+  --namespace  <namespace>   \
   [--revision <N>]
 ```
 

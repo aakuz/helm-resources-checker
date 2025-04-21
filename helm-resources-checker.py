@@ -142,18 +142,18 @@ def main():
         config.load_kube_config()
 
     parser = argparse.ArgumentParser(description="List Helm release resources and highlight live status.")
-    parser.add_argument("--release-name", required=True)
-    parser.add_argument("--release-namespace", required=True)
+    parser.add_argument("--name", required=True)
+    parser.add_argument("--namespace", required=True)
     parser.add_argument("--revision", type=int, help="Specific Helm release revision to inspect")
     args = parser.parse_args()
 
     dyn = dynamic.DynamicClient(api_client.ApiClient())
 
-    secret = find_release_secret(dyn, args.release_name, args.release_namespace, args.revision)
+    secret = find_release_secret(dyn, args.name, args.namespace, args.revision)
     if not secret:
         rev_msg = f" revision={args.revision}" if args.revision is not None else " (latest)"
         sys.exit(
-            f"Helm Secret for release '{args.release_name}'{rev_msg} not found in namespace '{args.release_namespace}'."
+            f"Helm Secret for release '{args.name}'{rev_msg} not found in namespace '{args.namespace}'."
         )
 
     release = decode_release_payload(secret.data["release"])
@@ -163,18 +163,18 @@ def main():
         sys.exit("[ERROR] Release payload missing 'manifest' field.")
 
     header = (
-        f"Resources in Helm release '{args.release_name}' revision {revision} (namespace {args.release_namespace}):"
+        f"Resources in Helm release '{args.name}' revision {revision} (namespace {args.namespace}):"
     )
     print(header)
     print("-" * len(header))
 
     exists_any = False
-    for api_ver, kind, ns, name in sorted(manifest_objects(manifest, args.release_namespace)):
+    for api_ver, kind, ns, name in sorted(manifest_objects(manifest, args.namespace)):
         live = object_exists(dyn, api_ver, kind, ns, name)
         colour = GREEN if live else RED
         status_txt = "✓ exists" if live else "✗ absent"
         exists_any = exists_any or live
-        ns_prefix = f"{ns}/" if ns else ""
+        ns_prefix = "" # f"{ns}/" if ns else
         print(f"{kind:<25} {ns_prefix}{name}  -> {colour}{status_txt}{RESET}")
 
     if not exists_any:
